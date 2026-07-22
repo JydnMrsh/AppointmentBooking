@@ -15,7 +15,7 @@ namespace AppointmentBooking
         {
             get
             {
-                if (!string.IsNullOrWhiteSpace(PreferredName))
+                if (string.IsNullOrWhiteSpace(PreferredName))
                 {
                     return LegalName;
                 }

@@ -27,7 +27,7 @@ public class AppointmentBookingServiceTests
     [TestMethod]
     public void BookAppointment_WhenDoctorHasNoAvailableSlots_ReturnsFailure()
     {
-        var doctor = new Doctor("D001", "Dr Mark", 2);
+        var doctor = new Doctor("D001", "Dr Mark", 0);
         var patient = new Patient("P001", "Diana William");
         var request = new AppointmentRequest(patient, doctor, DateTime.Today.AddDays(1));
         var service = new AppointmentBookingService();
@@ -139,5 +139,51 @@ public class AppointmentBookingServiceTests
         var patient = new Patient("P001", "Diana William");
         Assert.Throws<ArgumentException>(() =>
         new AppointmentRequest(patient, doctor, DateTime.Today.AddDays(-1)));
+    }
+
+    /*
+     * CO-PILOT SUGGESTED TESTS
+     */
+
+    // Sequential bookings should reduce slots once and not go negative
+    [TestMethod]
+    public void BookAppointment_SequentialBookings_SecondFailsAndSlotsNotNegative()
+    {
+        var doctor = new Doctor("D001", "Dr Mark", 1);
+        var patient1 = new Patient("P001", "Alice");
+        var patient2 = new Patient("P002", "Bob");
+        var service = new AppointmentBookingService();
+
+        var req1 = new AppointmentRequest(patient1, doctor, DateTime.Today.AddDays(1));
+        var req2 = new AppointmentRequest(patient2, doctor, DateTime.Today.AddDays(1));
+
+        BookingResult result1 = service.BookAppointment(req1);
+        BookingResult result2 = service.BookAppointment(req2);
+
+        Assert.IsTrue(result1.Success, "first booking should succeed");
+        Assert.IsFalse(result2.Success, "second booking should fail when no slots left");
+        Assert.AreEqual(0, doctor.AvailableSlots, "available slots must not go negative");
+    }
+
+    // Constructing an AppointmentRequest with null patient/doctor throws appropriate exceptions
+    [TestMethod]
+    public void AppointmentRequest_WhenPatientIsNull_ThrowsArgumentNullException()
+    {
+        var doctor = new Doctor("D001", "Dr Mark", 2);
+        Assert.Throws<ArgumentNullException>(() => new AppointmentRequest(null, doctor, DateTime.Today));
+    }
+    [TestMethod]
+    public void AppointmentRequest_WhenDoctorIsNull_ThrowsArgumentNullException()
+    {
+        var patient = new Patient("P001", "Alice");
+        Assert.Throws<ArgumentNullException>(() => new AppointmentRequest(patient, null, DateTime.Today));
+    }
+
+    // Doctor.ReserveSlot enforces invariants by throwing when no slots available
+    [TestMethod]
+    public void Doctor_ReserveSlot_WhenNoSlots_ThrowsInvalidOperationException()
+    {
+        var doctor = new Doctor("D001", "Dr Mark", 0);
+        Assert.Throws<InvalidOperationException>(() => doctor.ReserveSlot());
     }
 }

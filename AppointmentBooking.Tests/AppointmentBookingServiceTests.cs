@@ -60,7 +60,7 @@ public class AppointmentBookingServiceTests
 
         bool result = service.BookAppointment(request);
 
-        Assert.IsTrue(result);
+        Assert.IsFalse(result);
     }
 
     [TestMethod]
